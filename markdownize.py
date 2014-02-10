@@ -1,11 +1,11 @@
 #! python3
 
-'''
+'''{
 **Markdownize**: a totally stupid and absolutely indispensable (python 3) script 
 for converting source files to markdown documents
 
 (C) 2014, Frederic Peschanski under the MIT License (cf. LICENSE)
-'''
+}'''
 
 import sys
 
