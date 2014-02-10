@@ -1,21 +1,11 @@
 #! python3
 
 '''
-A totally stupid and absolutely indispensable (python 3) script 
+**Markdownize**: a totally stupid and absolutely indispensable (python 3) script 
 for converting source files to markdown documents
 
 (C) 2014, Frederic Peschanski under the MIT License (cf. LICENSE)
 '''
-
-
-'''{
----
-title:  'Markdownize documentation'
-author:
-- name: Frederic Peschanski
-...
-}'''
-
 
 import sys
 
@@ -46,7 +36,7 @@ cmd_parser = argparse.ArgumentParser()
 
 
 '''{
-The `--input` (or `-i') option of the command line is the input file to markdownize.
+The `--input` (or `-i`) option of the command line is the input file to markdownize.
 If left unspecified the input will be from the standard input.
 }'''
 
@@ -103,7 +93,6 @@ cmd_parser.parse_args(namespace=cmd_args)
 _Remark_: we adopt in this script a "fail first" philosophy that
 aborpts the conversion as soon as an error is encountered.
 }'''
-
 
 def abort(msg):
     print("""Error: {}
@@ -212,5 +201,3 @@ And if all went OK then we have a nice markdown produced.
 That's all folks !
 
 }'''
-
-
