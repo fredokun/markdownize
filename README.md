@@ -4,7 +4,7 @@ Markdownize
 A totally stupid and absolutely indispensable (python 3) script 
 for converting source files to markdown documents
 
-## usage ## 
+## Usage
 
     markdownize.py [-h] [-i INPUT] [-b BEGIN] [-e END] [-o OUTPUT]
 
@@ -19,6 +19,6 @@ for converting source files to markdown documents
                             the output file to generate.
 
 
-## Example ##
+## Example
 
     python3 ./markdownize.py --input ./markdownize.py --output ./markdownize.md --begin "'''{" --end "}'''"
