@@ -1,4 +1,5 @@
-markdownize
+Markdownize
 ===========
 
-A totally stupid and absolutely indispensable script for converting source files to markdown documents
+A totally stupid and absolutely indispensable (python 3) script 
+for converting source files to markdown documents
