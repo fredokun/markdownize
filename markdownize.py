@@ -17,7 +17,7 @@ author:
 }'''
 
 
-
+import sys
 
 '''{
 
@@ -46,10 +46,12 @@ cmd_parser = argparse.ArgumentParser()
 
 
 '''{
-The main argument of the command line is the input file to markdownize.
+The `--input` (or `-i') option of the command line is the input file to markdownize.
+If left unspecified the input will be from the standard input.
 }'''
 
-cmd_parser.add_argument('input', type=argparse.FileType('r'),
+cmd_parser.add_argument('-i', '--input', dest='input',
+                        type=argparse.FileType('r'), default=sys.stdin,
                         help="The input file to markdownize.")
 
 '''{
@@ -77,13 +79,12 @@ cmd_parser.add_argument('-e', '--end', dest='end', default=r'}*/',
                         help="the delimiter to end a document block.")
 
 '''{
-The `--output` (or `-o`) option is used to specify the output file. By default, this is the input file
- with the suffix `.md` appended.
+The `--output` (or `-o`) option is used to specify the output file. By default, this is the standard output.
 }'''
 
-cmd_parser.add_argument('-o', '--output',
+cmd_parser.add_argument('-o', '--output', dest='output',
+                        type=argparse.FileType('w'), default=sys.stdout,
                         help="the output file to generate.")
-
 
 '''{
 
@@ -99,20 +100,10 @@ cmd_args = CmdArgs()
 cmd_parser.parse_args(namespace=cmd_args)
 
 '''{
-
-Let's specify the output file, and defaults to the `.md` suffix.
-
-}'''
-
-if not cmd_args.output:
-    cmd_args.output = str(cmd_args.input) + ".md"
-
-'''{
 _Remark_: we adopt in this script a "fail first" philosophy that
 aborpts the conversion as soon as an error is encountered.
 }'''
 
-import sys
 
 def abort(msg):
     print("""Error: {}
@@ -128,32 +119,39 @@ The conversion is performed by a `Markdownizer`.
 
 }'''
 
-import re
+def markdownize(input_file, output_file, begin_doc, end_doc):
 
-def markdownize(input_file, output_filename, begin_doc, end_doc):
     '''{
     This is the core of the transformation.
     }'''
 
-    try:
-        output_file = open(output_filename, 'w')
-    except:
-        abort("cannot open output file for writing: {}".format(output_filename))
-
     in_document = False
     dedent_value = 0
-    
+
+    line_count = 0
+
     try:
         for line in input_file:
+            line_count += 1
+            #print("line #{} = ".format(line_count),line,file=sys.stderr)
+
+            #if line_count == 124:
+            #    import pdb; pdb.set_trace()
+
             if not in_document:
                 '''{
                 If we are not in a document block, then we first
                 try to find a begin delimiter block.
                 }'''
-                m = re.match(r"^([ \t]*)" + begin_doc + r"[ \t]*$")
-                if m:
+                if line.lstrip().rstrip() == begin_doc:
                     in_document = True
-                    dedent_value = len(m.group[1]) if m.group[1] else 0
+                    dedent_value = 0
+                    while line[dedent_value].isspace():
+                        dedent_value += 1
+                    try:
+                        output_file.write('\n')
+                    except:
+                        abort("problem while writing output file at line {}".format(line_count))
                 else:
                     '''{
                     Otherwise, we are in a code block so we have to insert exactly
@@ -162,16 +160,19 @@ def markdownize(input_file, output_filename, begin_doc, end_doc):
                     try:
                         output_file.write('    ' + line)
                     except:
-                        abort("problem while writing output file")
+                        abort("problem while writing output file at line {}".format(line_count))
             else:
                 '''{
                 If we are in a document block, then we first try
                 to find an end delimiter block.
                 }'''
-                m = re.match(r"^([ \t]*)" + end_doc + r"[ \t]*$")
-                if m:
+                if line.lstrip().rstrip() == end_doc:
                     in_document = False
                     dedent_value = 0
+                    try:
+                        output_file.write('\n')
+                    except:
+                        abort("problem while writing output file at line {}".format(line_count))
                 else:
                     '''{
                     Otherwise, we are still in a document block so we dedent
@@ -179,16 +180,16 @@ def markdownize(input_file, output_filename, begin_doc, end_doc):
                     then copy the line almost "as it is".
                     }'''
                     out_line = line[:]
-                    for i in range(dedent_value):
-                        if out_line[i] == ' ':
+                    for i in range(min(dedent_value, len(out_line))):
+                        if out_line[0] == ' ':
                             out_line = out_line[1:]
                     try:
                         output_file.write(out_line)
                     except:
-                        abort("problem while writing output file")
+                        abort("problem while writing output file at line {}".format(line_count))
 
     except:
-        abort("problem while reading input file")
+        abort("problem while reading input file at line {}".format(line_count))
                       
     input_file.close()
     output_file.close()
