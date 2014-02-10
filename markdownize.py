@@ -139,46 +139,46 @@ def markdownize(input_file, output_file, begin_doc, end_doc):
             #    import pdb; pdb.set_trace()
 
             if not in_document:
+
                 '''{
                 If we are not in a document block, then we first
                 try to find a begin delimiter block.
                 }'''
+
                 if line.lstrip().rstrip() == begin_doc:
                     in_document = True
                     dedent_value = 0
                     while line[dedent_value].isspace():
                         dedent_value += 1
-                    try:
-                        output_file.write('\n')
-                    except:
-                        abort("problem while writing output file at line {}".format(line_count))
                 else:
+
                     '''{
                     Otherwise, we are in a code block so we have to insert exactly
                     four spaces to produce a valid markdown document.
                     }'''
+
                     try:
                         output_file.write('    ' + line)
                     except:
                         abort("problem while writing output file at line {}".format(line_count))
             else:
+
                 '''{
                 If we are in a document block, then we first try
                 to find an end delimiter block.
                 }'''
+
                 if line.lstrip().rstrip() == end_doc:
                     in_document = False
                     dedent_value = 0
-                    try:
-                        output_file.write('\n')
-                    except:
-                        abort("problem while writing output file at line {}".format(line_count))
                 else:
+
                     '''{
                     Otherwise, we are still in a document block so we dedent
                     some prepending spaces (in a fairly robust way) and
                     then copy the line almost "as it is".
                     }'''
+
                     out_line = line[:]
                     for i in range(min(dedent_value, len(out_line))):
                         if out_line[0] == ' ':
