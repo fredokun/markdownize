@@ -24,4 +24,4 @@ for converting source files to markdown documents
 
 ## Example
 
-    python3 ./markdownize.py --input ./markdownize.py --output ./markdownize.md --begin "'''{" --end "}'''"
+    python3 ./markdownize.py --input ./markdownize.py --output ./markdownize.md --begin "'''{" --end "}'''" --lang python
