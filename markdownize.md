@@ -2,15 +2,18 @@
 #! python3
 
 ```
+
 **Markdownize**: a totally stupid and absolutely indispensable (python 3) script 
 for converting source files to markdown documents
 
 (C) 2014, Frederic Peschanski under the MIT License (cf. LICENSE)
+
 ```python
 
 import sys
 
 ```
+
 
 # Introduction #
 
@@ -22,11 +25,14 @@ This document is at the same time:
  - its commented source code
  - an example to `markdownize`
 
+
 ```python
 
 ```
 
+
 # Command line #
+
 
 ```python
 
@@ -37,8 +43,10 @@ cmd_parser = argparse.ArgumentParser()
 
 
 ```
+
 The `--input` (or `-i`) option of the command line is the input file to markdownize.
 If left unspecified the input will be from the standard input.
+
 ```python
 
 cmd_parser.add_argument('-i', '--input', dest='input',
@@ -46,7 +54,9 @@ cmd_parser.add_argument('-i', '--input', dest='input',
                         help="The input file to markdownize.")
 
 ```
+
 The `--output` (or `-o`) option is used to specify the output file. By default, this is the standard output.
+
 ```python
 
 cmd_parser.add_argument('-o', '--output', dest='output',
@@ -54,6 +64,7 @@ cmd_parser.add_argument('-o', '--output', dest='output',
                         help="the output file to generate.")
 
 ```
+
 The `--begin` (or `-b`) and `--end` (or `-e`) optional arguments allow to select the delimiters between
  the document blocks and the source code blocks.
 
@@ -69,6 +80,7 @@ This means that a document block will be of the form:
 
 while everything else will be considered a source code block.
 
+
 ```python
 
 cmd_parser.add_argument('-b', '--begin', dest='begin', default=r'/*{', 
@@ -79,9 +91,11 @@ cmd_parser.add_argument('-e', '--end', dest='end', default=r'}*/',
 
 
 ```
+
 The option `--lang` (or `-l`) allows to specify a language for the
 code blocks. This is supported in e.g. github markdown and also
 pandoc.
+
 ```python
 
 cmd_parser.add_argument('-l', '--lang', dest='lang', default=None, 
@@ -89,7 +103,9 @@ cmd_parser.add_argument('-l', '--lang', dest='lang', default=None,
 
 ```
 
+
 And now the command line parsing begins.
+
 
 ```python
 
@@ -101,8 +117,10 @@ cmd_args = CmdArgs()
 cmd_parser.parse_args(namespace=cmd_args)
 
 ```
+
 _Remark_: we adopt in this script a "fail first" philosophy that
 aborpts the conversion as soon as an error is encountered.
+
 ```python
 
 def abort(msg):
@@ -113,16 +131,20 @@ def abort(msg):
 
 ```
 
+
 # Conversion #
 
 The conversion is performed by a `Markdownizer`.
+
 
 ```python
 
 def markdownize(input_file, output_file, begin_doc, end_doc, lang):
 
 ```
+
 This is the core of the transformation.
+
 ```python
 
     in_document = False
@@ -142,8 +164,10 @@ This is the core of the transformation.
             if not in_document:
 
 ```
+
 If we are not in a document block, then we first
 try to find a begin delimiter block.
+
 ```python
 
                 if line.lstrip().rstrip() == begin_doc:
@@ -153,7 +177,9 @@ try to find a begin delimiter block.
                         dedent_value += 1
 
 ```
+
 We have to close the code block if it is started.
+
 ```python
                     if code_block_started:
                         if lang is None:
@@ -162,22 +188,36 @@ We have to close the code block if it is started.
                             output_file.write('```\n')
 
                         code_block_started = False
+
+```
+
+And we put a newline instead of the begin block.
+
+```python
+                    output_file.write('\n')
+
                 else:
 
 ```
+
 Otherwise, we are in a code block. If it is not yet started
 then we start it.
+
 ```python
 
                     if not code_block_started:
                         if lang is None:
 ```
+
 We add a blank line if no language is set.
+
 ```python
                             output_file.write('\n')
                         else:
 ```
+
 Otherwise we put the code block header.
+
 ```python
                             output_file.write('```{}\n'.format(lang))
 
@@ -186,34 +226,50 @@ Otherwise we put the code block header.
                     if lang is None:
                         
 ```
+
 If the language for code blocks is not set, we just insert exactly
 four spaces to produce a valid markdown document.
+
 ```python
                         
                         output_file.write('    ' + line)
                     else:
                         
 ```
+
 Otherwise, we simply copy the input line as it is.
+
 ```python
                         
                         output_file.write(line)
             else:
 
 ```
+
 If we are in a document block, then we first try
 to find an end delimiter block.
+
 ```python
 
                 if line.lstrip().rstrip() == end_doc:
                     in_document = False
                     dedent_value = 0
+
+```
+
+And we put a newline instead of the end block.
+
+```python
+                    output_file.write('\n')
+
                 else:
 
 ```
+
 Otherwise, we are still in a document block so we dedent
 some prepending spaces (in a fairly robust way) and
 then copy the line almost "as it is".
+
 ```python
 
                     out_line = line[:]
@@ -231,14 +287,18 @@ then copy the line almost "as it is".
               
 
 ```
+
 The main conversion starts now.
+
 ```python
 
 markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.lang)
 
 ```
+
 And if all went OK then we have a nice markdown produced.
 
 # Conclusion #
 
 That's all folks !
+

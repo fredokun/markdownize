@@ -161,6 +161,12 @@ def markdownize(input_file, output_file, begin_doc, end_doc, lang):
                             output_file.write('```\n')
 
                         code_block_started = False
+
+                    '''{
+                    And we put a newline instead of the begin block.
+                    }'''
+                    output_file.write('\n')
+
                 else:
 
                     '''{
@@ -207,6 +213,12 @@ def markdownize(input_file, output_file, begin_doc, end_doc, lang):
                 if line.lstrip().rstrip() == end_doc:
                     in_document = False
                     dedent_value = 0
+
+                    '''{
+                    And we put a newline instead of the end block.
+                    }'''
+                    output_file.write('\n')
+
                 else:
 
                     '''{
