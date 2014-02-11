@@ -45,6 +45,14 @@ cmd_parser.add_argument('-i', '--input', dest='input',
                         help="The input file to markdownize.")
 
 '''{
+The `--output` (or `-o`) option is used to specify the output file. By default, this is the standard output.
+}'''
+
+cmd_parser.add_argument('-o', '--output', dest='output',
+                        type=argparse.FileType('w'), default=sys.stdout,
+                        help="the output file to generate.")
+
+'''{
 The `--begin` (or `-b`) and `--end` (or `-e`) optional arguments allow to select the delimiters between
  the document blocks and the source code blocks.
 
@@ -68,13 +76,15 @@ cmd_parser.add_argument('-b', '--begin', dest='begin', default=r'/*{',
 cmd_parser.add_argument('-e', '--end', dest='end', default=r'}*/',
                         help="the delimiter to end a document block.")
 
+
 '''{
-The `--output` (or `-o`) option is used to specify the output file. By default, this is the standard output.
+The option `--lang` (or `-l`) allows to specify a language for the
+code blocks. This is supported in e.g. github markdown and also
+pandoc.
 }'''
 
-cmd_parser.add_argument('-o', '--output', dest='output',
-                        type=argparse.FileType('w'), default=sys.stdout,
-                        help="the output file to generate.")
+cmd_parser.add_argument('-l', '--lang', dest='lang', default=None, 
+                        help="the language specifier for code blocks.")
 
 '''{
 
@@ -108,13 +118,14 @@ The conversion is performed by a `Markdownizer`.
 
 }'''
 
-def markdownize(input_file, output_file, begin_doc, end_doc):
+def markdownize(input_file, output_file, begin_doc, end_doc, lang):
 
     '''{
     This is the core of the transformation.
     }'''
 
     in_document = False
+    code_block_started = False
     dedent_value = 0
 
     line_count = 0
@@ -139,17 +150,53 @@ def markdownize(input_file, output_file, begin_doc, end_doc):
                     dedent_value = 0
                     while line[dedent_value].isspace():
                         dedent_value += 1
+
+                    '''{
+                    We have to close the code block if it is started.
+                    }'''
+                    if code_block_started:
+                        if lang is None:
+                            output_file.write('\n')
+                        else:
+                            output_file.write('```\n')
+
+                        code_block_started = False
                 else:
 
                     '''{
-                    Otherwise, we are in a code block so we have to insert exactly
-                    four spaces to produce a valid markdown document.
+                    Otherwise, we are in a code block. If it is not yet started
+                    then we start it.
                     }'''
 
-                    try:
+                    if not code_block_started:
+                        if lang is None:
+                            '''{
+                            We add a blank line if no language is set.
+                            }'''
+                            output_file.write('\n')
+                        else:
+                            '''{
+                            Otherwise we put the code block header.
+                            }'''
+                            output_file.write('```{}\n'.format(lang))
+
+                        code_block_started = True
+
+                    if lang is None:
+                        
+                        '''{
+                        If the language for code blocks is not set, we just insert exactly
+                        four spaces to produce a valid markdown document.
+                        }'''
+                        
                         output_file.write('    ' + line)
-                    except:
-                        abort("problem while writing output file at line {}".format(line_count))
+                    else:
+                        
+                        '''{
+                        Otherwise, we simply copy the input line as it is.
+                        }'''
+                        
+                        output_file.write(line)
             else:
 
                 '''{
@@ -172,32 +219,26 @@ def markdownize(input_file, output_file, begin_doc, end_doc):
                     for i in range(min(dedent_value, len(out_line))):
                         if out_line[0] == ' ':
                             out_line = out_line[1:]
-                    try:
-                        output_file.write(out_line)
-                    except:
-                        abort("problem while writing output file at line {}".format(line_count))
+                        
+                    output_file.write(out_line)
 
     except:
-        abort("problem while reading input file at line {}".format(line_count))
+        abort("problem while markdownizing at line {}".format(line_count))
                       
     input_file.close()
     output_file.close()
               
 
 '''{
-
 The main conversion starts now.
-
 }'''
 
-markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end)
+markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.lang)
 
 '''{
-
 And if all went OK then we have a nice markdown produced.
 
 # Conclusion #
 
 That's all folks !
-
 }'''
