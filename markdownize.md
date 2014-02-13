@@ -8,8 +8,8 @@ for converting source files to markdown documents
 
 (C) 2014, Frederic Peschanski under the MIT License (cf. LICENSE)
 
-```python
 
+```python
 import sys
 
 ```
@@ -26,16 +26,14 @@ This document is at the same time:
  - an example to `markdownize`
 
 
-```python
 
-```
 
 
 # Command line #
 
 
-```python
 
+```python
 import argparse
 
 # command line
@@ -47,8 +45,8 @@ cmd_parser = argparse.ArgumentParser()
 The `--input` (or `-i`) option of the command line is the input file to markdownize.
 If left unspecified the input will be from the standard input.
 
-```python
 
+```python
 cmd_parser.add_argument('-i', '--input', dest='input',
                         type=argparse.FileType('r'), default=sys.stdin,
                         help="The input file to markdownize.")
@@ -57,8 +55,8 @@ cmd_parser.add_argument('-i', '--input', dest='input',
 
 The `--output` (or `-o`) option is used to specify the output file. By default, this is the standard output.
 
-```python
 
+```python
 cmd_parser.add_argument('-o', '--output', dest='output',
                         type=argparse.FileType('w'), default=sys.stdout,
                         help="the output file to generate.")
@@ -81,8 +79,8 @@ This means that a document block will be of the form:
 while everything else will be considered a source code block.
 
 
-```python
 
+```python
 cmd_parser.add_argument('-b', '--begin', dest='begin', default=r'/*{', 
                         help="the delimiter to begin a document block.")
 
@@ -96,8 +94,8 @@ The option `--lang` (or `-l`) allows to specify a language for the
 code blocks. This is supported in e.g. github markdown and also
 pandoc.
 
-```python
 
+```python
 cmd_parser.add_argument('-l', '--lang', dest='lang', default=None, 
                         help="the language specifier for code blocks.")
 
@@ -107,8 +105,8 @@ cmd_parser.add_argument('-l', '--lang', dest='lang', default=None,
 And now the command line parsing begins.
 
 
-```python
 
+```python
 class CmdArgs:
     pass
 
@@ -121,8 +119,8 @@ cmd_parser.parse_args(namespace=cmd_args)
 _Remark_: we adopt in this script a "fail first" philosophy that
 aborpts the conversion as soon as an error is encountered.
 
-```python
 
+```python
 def abort(msg):
     print("""Error: {}
     ==> Cannot markdownize ... abort :-(
@@ -137,16 +135,16 @@ def abort(msg):
 The conversion is performed by a `Markdownizer`.
 
 
-```python
 
+```python
 def markdownize(input_file, output_file, begin_doc, end_doc, lang):
 
 ```
 
 This is the core of the transformation.
 
-```python
 
+```python
     in_document = False
     code_block_started = False
     dedent_value = 0
@@ -168,8 +166,8 @@ This is the core of the transformation.
 If we are not in a document block, then we first
 try to find a begin delimiter block.
 
-```python
 
+```python
                 if line.lstrip().rstrip() == begin_doc:
                     in_document = True
                     dedent_value = 0
@@ -201,11 +199,11 @@ And we put a newline instead of the begin block.
 ```
 
 Otherwise, we are in a code block. If it is not yet started
-then we start it.
+then we start it, except if the current line is blank.
+
 
 ```python
-
-                    if not code_block_started:
+                    if line != '\n' and not code_block_started:
                         if lang is None:
 ```
 
@@ -249,8 +247,8 @@ Otherwise, we simply copy the input line as it is.
 If we are in a document block, then we first try
 to find an end delimiter block.
 
-```python
 
+```python
                 if line.lstrip().rstrip() == end_doc:
                     in_document = False
                     dedent_value = 0
@@ -270,8 +268,8 @@ Otherwise, we are still in a document block so we dedent
 some prepending spaces (in a fairly robust way) and
 then copy the line almost "as it is".
 
-```python
 
+```python
                     out_line = line[:]
                     for i in range(min(dedent_value, len(out_line))):
                         if out_line[0] == ' ':
@@ -290,8 +288,8 @@ then copy the line almost "as it is".
 
 The main conversion starts now.
 
-```python
 
+```python
 markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.lang)
 
 ```

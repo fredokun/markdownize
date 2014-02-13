@@ -171,10 +171,10 @@ def markdownize(input_file, output_file, begin_doc, end_doc, lang):
 
                     '''{
                     Otherwise, we are in a code block. If it is not yet started
-                    then we start it.
+                    then we start it, except if the current line is blank.
                     }'''
 
-                    if not code_block_started:
+                    if line != '\n' and not code_block_started:
                         if lang is None:
                             '''{
                             We add a blank line if no language is set.
