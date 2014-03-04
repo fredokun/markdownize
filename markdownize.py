@@ -236,7 +236,17 @@ def markdownize(input_file, output_file, begin_doc, end_doc, lang):
 
     except:
         abort("problem while markdownizing at line {}".format(line_count))
-                      
+        
+    '''{
+    If at the end we were in a code block, then we have to close it.
+    }'''
+    if code_block_started:
+        if lang is None:
+            output_file.write('\n')
+        else:
+            output_file.write('```\n')
+        code_block_started = False # Remember the boy scout rule ...
+
     input_file.close()
     output_file.close()
               
