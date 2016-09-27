@@ -90,6 +90,23 @@ cmd_parser.add_argument('-e', '--end', dest='end', default=r'}*/',
 
 ```
 
+The option `--remove-prefix` (or `-rp`) will remove any occurrence of the specified
+ *prefix* inside each document block (as delimited by the `--begin` and `--end` options).
+
+For example if the prefix is `";; "` then if a line within a document block is so prefixed,
+ e.g. `";; this is *inside* a document block"`  then it will be rewritten as
+`"this is *inside* a document block"`. Otherwise the line is left unchanged.
+
+This option is useful for programming languages having no support for block comments.
+By default, there is no prefix specified (i.e. it is the empty string `""`).
+
+
+```python
+cmd_parser.add_argument('-rp', '--remove-prefix', dest='prefix', default="",
+                        help="the prefix to remove in a document block.")
+
+```
+
 The option `--lang` (or `-l`) allows to specify a language for the
 code blocks. This is supported in e.g. github markdown and also
 pandoc.
@@ -137,7 +154,7 @@ The conversion is performed by a `Markdownizer`.
 
 
 ```python
-def markdownize(input_file, output_file, begin_doc, end_doc, lang):
+def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang):
 
 ```
 
@@ -145,6 +162,8 @@ This is the core of the transformation.
 
 
 ```python
+    #import pdb ; pdb.set_trace()
+
     in_document = False
     code_block_started = False
     dedent_value = 0
@@ -222,23 +241,23 @@ Otherwise we put the code block header.
                         code_block_started = True
 
                     if lang is None:
-                        
+
 ```
 
 If the language for code blocks is not set, we just insert exactly
 four spaces to produce a valid markdown document.
 
+
 ```python
-                        
                         output_file.write('    ' + line)
                     else:
-                        
+
 ```
 
 Otherwise, we simply copy the input line as it is.
 
+
 ```python
-                        
                         output_file.write(line)
             else:
 
@@ -264,22 +283,39 @@ And we put a newline instead of the end block.
 
 ```
 
-Otherwise, we are still in a document block so we dedent
-some prepending spaces (in a fairly robust way) and
-then copy the line almost "as it is".
+Otherwise, we are still in a document block.
 
 
 ```python
                     out_line = line[:]
+
+                    if remove_prefix:
+```
+
+If there is a prefix to remove (`--remove-prefix` option), then
+we first check if the line read starts with the specified prefix.
+and if so the prefix is removed.
+
+```python
+                        if out_line.startswith(remove_prefix):
+                            out_line = out_line[len(remove_prefix):]
+
+```
+
+Then, in any case, we dedent
+some prepending spaces (in a fairly robust way) and
+then copy the line almost "as it is".
+
+```python
                     for i in range(min(dedent_value, len(out_line))):
                         if out_line[0] == ' ':
                             out_line = out_line[1:]
-                        
+
                     output_file.write(out_line)
 
     except:
         abort("problem while markdownizing at line {}".format(line_count))
-        
+
 ```
 
 If at the end we were in a code block, then we have to close it.
@@ -294,7 +330,6 @@ If at the end we were in a code block, then we have to close it.
 
     input_file.close()
     output_file.close()
-              
 
 ```
 
@@ -302,7 +337,7 @@ The main conversion starts now.
 
 
 ```python
-markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.lang)
+markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.prefix, cmd_args.lang)
 
 ```
 
