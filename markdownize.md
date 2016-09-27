@@ -289,20 +289,9 @@ Otherwise, we are still in a document block.
 ```python
                     out_line = line[:]
 
-                    if remove_prefix:
 ```
 
-If there is a prefix to remove (`--remove-prefix` option), then
-we first check if the line read starts with the specified prefix.
-and if so the prefix is removed.
-
-```python
-                        if out_line.startswith(remove_prefix):
-                            out_line = out_line[len(remove_prefix):]
-
-```
-
-Then, in any case, we dedent
+First, we dedent
 some prepending spaces (in a fairly robust way) and
 then copy the line almost "as it is".
 
@@ -310,6 +299,18 @@ then copy the line almost "as it is".
                     for i in range(min(dedent_value, len(out_line))):
                         if out_line[0] == ' ':
                             out_line = out_line[1:]
+
+                    if remove_prefix:
+```
+
+Then, if there is a prefix to remove (`--remove-prefix` option), then
+we first check if the line read starts with the specified prefix.
+and if so the prefix is removed.
+
+```python
+                        if out_line.startswith(remove_prefix):
+                            out_line = out_line[len(remove_prefix):]
+
 
                     output_file.write(out_line)
 
