@@ -152,7 +152,45 @@ def abort(msg):
 
 # Conversion #
 
-The conversion is performed by a `Markdownizer`.
+First we need a simple auxiliary function that tests if some
+provided text is recognized by a document *marker* (begin, end
+ or remove prefix). It returns the recognized (sub-)string or
+ None if there is no match.
+}'''
+
+REGULAR_EXPRESSION_TYPE = re.compile('').__class__
+
+def recognize(text, marker, start_only=False):
+    if isinstance(marker, str):
+        if start_only:
+            if text.startswith(marker):
+                return marker
+            else:
+                return None
+        else:
+            if text == marker:
+                return marker
+            else:
+                return None
+    elif isinstance(marker, REGULAR_EXPRESSION_TYPE):
+        if start_only:
+            match_obj = marker.match(text)
+            if match_obj is None:
+                return None
+            else:
+                return match_obj.group(0)
+        else:
+            match_obj = marker.fullmatch(text)
+            if match_obj is None:
+                return None
+            else:
+                return match_obj.group(0)
+    else:
+        raise ValueError("Cannot recognize this marker: {}".format(marker))
+
+'''{
+
+The conversion is performed by the following function.
 
 }'''
 
@@ -161,8 +199,6 @@ def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang
     '''{
     This is the core of the transformation.
     }'''
-
-    #import pdb ; pdb.set_trace()
 
     in_document = False
     code_block_started = False
@@ -185,7 +221,7 @@ def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang
                 try to find a begin delimiter block.
                 }'''
 
-                if line.lstrip().rstrip() == begin_doc:
+                if recognize(line.lstrip().rstrip(), begin_doc) is not None:
                     in_document = True
                     dedent_value = 0
                     while line[dedent_value].isspace():
@@ -250,7 +286,7 @@ def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang
                 to find an end delimiter block.
                 }'''
 
-                if line.lstrip().rstrip() == end_doc:
+                if recognize(line.lstrip().rstrip(), end_doc) is not None:
                     in_document = False
                     dedent_value = 0
 
@@ -282,14 +318,14 @@ def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang
                         we first check if the line read starts with the specified prefix.
                         and if so the prefix is removed.
                         }'''
-                        if out_line.startswith(remove_prefix):
-                            out_line = out_line[len(remove_prefix):]
-
+                        removed_text = recognize(out_line, remove_prefix, start_only=True)
+                        if removed_text is not None:
+                            out_line = out_line[len(removed_text):]
 
                     output_file.write(out_line)
 
-    except:
-        abort("problem while markdownizing at line {}".format(line_count))
+    except Exception as e:
+        abort("problem while markdownizing at line {}\n ==> cause: {}".format(line_count, e))
 
     '''{
     If at the end we were in a code block, then we have to close it.
