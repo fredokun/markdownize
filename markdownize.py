@@ -4,10 +4,11 @@
 **Markdownize**: a totally stupid and absolutely indispensable (python 3) script 
 for converting source files to markdown documents
 
-(C) 2014, Frederic Peschanski under the MIT License (cf. LICENSE)
+(C) 2014-2018, Frederic Peschanski under the MIT License (cf. LICENSE)
 }'''
 
 import sys
+import re
 
 '''{
 
@@ -76,7 +77,6 @@ cmd_parser.add_argument('-b', '--begin', dest='begin', default=r'/*{',
 cmd_parser.add_argument('-e', '--end', dest='end', default=r'}*/',
                         help="the delimiter to end a document block.")
 
-
 '''{
 The option `--remove-prefix` (or `-rp`) will remove any occurrence of the specified
  *prefix* inside each document block (as delimited by the `--begin` and `--end` options).
@@ -93,6 +93,28 @@ cmd_parser.add_argument('-rp', '--remove-prefix', dest='prefix', default="",
                         help="the prefix to remove in a document block.")
 
 '''{
+Markdownize supports variants of the previous options with a `-re` suffix that allows to
+use regular expressions instead of simple string: 
+
+ - `--begin-re <regex>`  the begin document block as a regular expression
+ - `--close-re <regex>`  the end document block as a regular expression
+ - `--remove-prefix-re <regex>` the remove prefix as a regular expression
+
+Because these options are for relatively advanced usage, there is no short version provided.
+
+}'''
+
+cmd_parser.add_argument('--begin-re', dest='begin_re', default=None, 
+                        help="the delimiter to begin a document block (as a regular expression).")
+
+cmd_parser.add_argument('--end-re', dest='end_re', default=None,
+                        help="the delimiter to end a document block (as a regular expression).")
+
+cmd_parser.add_argument('--remove-prefix-re', dest='prefix_re', default=None,
+                        help="the prefix to remove in a document block (as a regular expression).")
+
+
+'''{
 The option `--lang` (or `-l`) allows to specify a language for the
 code blocks. This is supported in e.g. github markdown and also
 pandoc.
@@ -100,6 +122,7 @@ pandoc.
 
 cmd_parser.add_argument('-l', '--lang', dest='lang', default=None, 
                         help="the language specifier for code blocks.")
+
 
 '''{
 
@@ -282,10 +305,32 @@ def markdownize(input_file, output_file, begin_doc, end_doc, remove_prefix, lang
     output_file.close()
 
 '''{
+If regular expressions are provided, then we compile them.
+}'''
+
+doc_begin = cmd_args.begin
+if cmd_args.begin_re:
+    doc_begin = re.compile(cmd_args.begin_re)
+
+doc_end = cmd_args.end
+if cmd_args.end_re:
+    doc_end = re.compile(cmd_args.end_re)
+
+doc_prefix = cmd_args.prefix
+if cmd_args.prefix_re:
+    doc_prefix = re.compile(cmd_args.prefix_re)
+
+'''{
+Thus in the conversion we will have to make a clear distinction between
+ strings or compiled regexps when handling these parameters.
+}'''
+    
+'''{
 The main conversion starts now.
 }'''
 
-markdownize(cmd_args.input, cmd_args.output, cmd_args.begin, cmd_args.end, cmd_args.prefix, cmd_args.lang)
+
+markdownize(cmd_args.input, cmd_args.output, doc_begin, doc_end, doc_prefix, cmd_args.lang)
 
 '''{
 And if all went OK then we have a nice markdown produced.
